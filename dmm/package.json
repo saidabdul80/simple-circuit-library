@@ -1,0 +1,33 @@
+{
+  "name": "dmm.js-serial",
+  "version": "1.2.0",
+  "description": "RS232 API for compatible DMM (Digital Multimeter) and other SCPI-compatible devices",
+  "main": "index.js",
+  "dependencies": {
+    "serialport": "^9.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rascafr/dmm-js.git"
+  },
+  "keywords": [
+    "RS232",
+    "DMM",
+    "multimeter",
+    "SCPI",
+    "agilent",
+    "34401",
+    "34410",
+    "serialport"
+  ],
+  "author": "François Leparoux",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rascafr/dmm-js/issues"
+  },
+  "homepage": "https://github.com/rascafr/dmm-js#readme"
+}
