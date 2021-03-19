@@ -78,41 +78,76 @@ class initJsplumb{
 
     }
 
-    check_reader_connection(connections){
+    check_reader_connection(connections){    	
   		let connection,state=0, terminals = "";
-  		let junctions = {terminal1:{targetId:'',sourceType:''}, terminal2:{targetId:'',sourceType:''}};    	
+  		let junctions = {terminal1:{targetId:'',sourceType:''}, terminal2:{targetId:'',sourceType:''}, fullConnect:false};    	
 
     	for (let i = 0; i < connections.length; i++) {
     		connection = connections[i];     
     		if (state<3){
-
+			
 	    		if (connection.sourceId.split("_")[0] == "reader"){
-	    			
-	    			//if reader is on the source side
-	    			state++;    			
-	    			if (state<3){
-	    				junctions.terminal1.targetId = connection.targetId;
-	    				junctions.terminal1.sourceType = connection.sourceType;
-	    			}
+	    			if (state == 1) {		    			
+		    			//if reader is on the source side		    			
+		    			junctions.terminal2.targetId = connection.targetId;
+		    			junctions.terminal2.sourceType = connection.sourceType;
+		    			state++;
 
-	    		}else if(connection.targetId.split("_")[0] == "reader"){    			
-	    			
-	    			//if reader is on the target side
-	    			state++;    			
-	    			if (state<3){
-	    				junctions.terminal1.targetId = connection.sourceId;
-	    				junctions.terminal1.sourceType = connection.targetType;
+		    			if (junctions.terminal1.targetId == junctions.terminal2.targetId) {
+		    				junctions.fullConnect = true;
+		    			}
+	    			}else if(state == 0){
+
+		    			junctions.terminal1.targetId = connection.targetId;
+		    			junctions.terminal1.sourceType = connection.sourceType;
+		    			state++;
+
 	    			}
 
 	    		}
 
+	    		if(connection.targetId.split("_")[0] == "reader"){    			
+		    		if (state == 1) {		    
+		    			
+	    				//if reader is on the source side
+			    		junctions.terminal2.targetId = connection.sourceId;
+		    			junctions.terminal2.sourceType = connection.targetType;		    			
+			    		state++;    				    		
+		    			if (junctions.terminal1.targetId == junctions.terminal2.targetId) {
+		    				junctions.fullConnect = true;
+		    			}
+		    		}else if(state == 0){		    			
+		    			//if reader is on the target side
+		    			junctions.terminal1.targetId = connection.sourceId;
+		    			junctions.terminal1.sourceType = connection.targetType;
+		    			state++;    			
+		    		}
+	    			
+	    		}
+
+
     		}
     		if (state == 2) {
-    			return junctions;
+    			break;
     		}
 		}
+    	return junctions;
     }
+    check_connection(connectionsData, $nn){
+    	let datachecking;
 
+    	
+    		datachecking = this.check_reader_connection(connectionsData);
+    	console.log({named:datachecking});
+    		if(datachecking.fullConnect){    			
+    			let rst = JSON.parse($('#'+datachecking.terminal1.targetId).attr('data-value'));
+    			if(datachecking.terminal1.targetId.split('_')[0] == "resistor"){
+    				dataObject.stateType = "ohms";    				
+    				dataObject.value = rst[0].value;
+    				//digitalMultimerupdate();
+    			}
+    		}    	
+    }
 
 	batchjsplumb(objArray){
 		var $vm = this;
@@ -188,11 +223,12 @@ class initJsplumb{
 		                        	type2 = "positive";
 		                        }
 
-	                            $vm.ArrConn.push({'sourceType':type,'targetType':type2, 'source': connections[j].sourceId, 'target':connections[j].targetId});
+	                            $vm.ArrConn.push({'sourceType':type,'targetType':type2, 'sourceId': connections[j].sourceId, 'targetId':connections[j].targetId});
 	                            s = s + "<tr><td>" + connections[j].scope + "</td>" + "<td>" + connections[j].sourceId + "</td><td>" + connections[j].targetId + "</td></tr>";
 	                        } 
-	                        console.log($vm.ArrConn);                     
+	                        console.log({name:$vm.ArrConn});                     
 	                        //showConnectionInfo(s);
+	                        $vm.check_connection($vm.ArrConn, $vm);
 	                    } else{
 	                       // hideConnectionInfo();
 	                    }
@@ -314,7 +350,8 @@ class initJsplumb{
 
 	                    	//alert(conso)
 	                    var detachLinks = jsPlumb.getSelector('.remover2');
-	                    $vm.instance.on(detachLinks, "dblclick", function (e) {
+	                    $vm.instance.on(detachLinks, "dblclick", function (e){
+							dataObject.value=0;//modify this to target wen detaching reader 
 	                    	$vm.instance.deleteConnectionsForElement(this.getAttribute("rel"));
                     	});	   
 

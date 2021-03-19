@@ -19,6 +19,7 @@
 	align-items: center;
 }
 .btnDigital:active{
+      user-select: none;
      box-shadow: none;
 }
 .btnDigitalActivate{

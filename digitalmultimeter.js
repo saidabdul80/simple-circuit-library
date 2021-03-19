@@ -15,9 +15,15 @@ class digitalMultimeter{
 			this.dynamic_range_id = "";
 			this.dynamic_id = "";
 			this.dynamic_class_btn = "";
-			this.dataObject ={ 
-				stateType: 'off'
+			window.dataObject = { 
+				readerStateType:'off',
+				stateType: 'off',
+				value:0
 			};
+
+			/*window.dataObject2 = {
+				data: 0,
+			}*/
 			this.valueholder_id = "";
 			var $vm = this;		
 			this.exampleEndpoint ="";
@@ -60,39 +66,127 @@ class digitalMultimeter{
 			this.dynamic_id += Math.floor((Math.random() * 1000) + 1);
 			var cont_holder =  '<div id="'+this.dynamic_id+'" class="dragme" style="background: #fff;box-shadow: 0px 0px 4px #ccc; width: 200px; border-radius: 10px; height: 100px;padding: 12px 8px; position: absolute;display: flex;user-select: none;">';
           		cont_holder += '<div class="remover"   style="cursor:pointer;background:red;color:white;display:none;position:absolute;top:-35px;left:30%;border-radius:50%;flex-wrap:wrap;justify-content:center;align-items:center; width:35px;height:35px;font-size:1.3em;z-index:2;">&times</div>';
-          		cont_holder += '<div class="remover2" rel="'+this.dynamic_id+'"   style="cursor:pointer;background:red;color:white;display:none;position:absolute;top:-35px;left:50%;border-radius:50%;flex-wrap:wrap;justify-content:center;align-items:center; width:35px;height:35px;font-size:1.3em;z-index:2;">&#x2702;</div>';
+          		cont_holder += '<div  class="remover2" rel="'+this.dynamic_id+'"   style="cursor:pointer;background:red;color:white;display:none;position:absolute;top:-35px;left:50%;border-radius:50%;flex-wrap:wrap;justify-content:center;align-items:center; width:35px;height:35px;font-size:1.3em;z-index:2;">&#x2702;</div>';
 				cont_holder += '<div style="display: flex;flex-direction: column;width: 100%;">';
 
-				cont_holder += '<div id="'+this.dynamic_mode_id+'" style="font-size: 300%;display: flex;justify-content: center;flex-wrap: wrap;align-items: center; font-stretch: condensed; font-family: \'digital-clock\', sans-serif;background-image: radial-gradient(closest-side at 50%  20%,#fff,#eee); width: 100%;border-radius: 10px;height: 70%;">000.00</div>';
+				cont_holder += '<div id="'+this.dynamic_mode_id+'" style="font-size: 300%;display: flex;justify-content: center;flex-wrap: wrap;align-items: center; font-stretch: condensed; font-family: \'digital-clock\', sans-serif;background-image: radial-gradient(closest-side at 50%  20%,#fff,#eee); width: 100%;border-radius: 10px;height: 70%;"><span style="font-family:inherit;color:#bbb;">000:00</span></div>';
 				/*cont_holder += '<span id="'+this.dynamic_mode_id+'" title="mode" style="position: absolute;font-size: 1em; left: 8%;bottom: 42px;font-family:\'digital-clock\'">0</span>';*/
 				/*cont_holder += '<input type="range" orient="vertical" class="digitalSlider" id="'+this.dynamic_range_id+'" value="0" min="0" max="220" style=""></div>';*/
 				cont_holder += '<input type="number" value="0"  style="display:none;" id="'+this.valueholder_id+'">'		
 				cont_holder += '<div style="display: flex;justify-content:center; flex-wrap: wrap; align-items: center;margin: 0px 2px;">';
-				cont_holder += '<button onclick="state(\'off\');" class="btnDigital '+this.dynamic_class_btn+' btnDigitalActivate"><span> Off</span></button>'; //Off;
-				cont_holder += '<button onclick="state(\'ac\');" class="'+this.dynamic_class_btn+' btnDigital "><span>AC</span><span class="symbolDigital ">&#126;</span>';//ac button
-				cont_holder += '</button ><button onclick="state(\'dc\');" class="'+this.dynamic_class_btn+' btnDigital"><span>DC</span><span class="symbolDigital ">&#95;</span></button>'; //dc button
-				cont_holder += '<button onclick="state(\'ohms\');" class="btnDigital '+this.dynamic_class_btn+'"><span> &#x2126;</span></button>'; //ohms button;
+				cont_holder += '<button onclick="digitalState(\'off\',this);"  class="btnDigital '+this.dynamic_class_btn+' btnDigitalActivate"><span> Off</span></button>'; //Off;
+				cont_holder += '<button onclick="digitalState(\'ac\',this);" class="'+this.dynamic_class_btn+' btnDigital "><span>AC</span><span class="symbolDigital ">&#126;</span>';//ac button
+				cont_holder += '</button ><button onclick="digitalState(\'dc\',this);" class="'+this.dynamic_class_btn+' btnDigital"><span>DC</span><span class="symbolDigital ">&#95;</span></button>'; //dc button
+				cont_holder += '<button onclick="digitalState(\'ohms\',this);" class="btnDigital '+this.dynamic_class_btn+'"><span> &#x2126;</span></button>'; //ohms button;
 				//cont_holder += '<button class="btnDigital '+this.dynamic_class_btn+'"><span> &#x2126;</span></button>'; //ohms button;
 				//cont_holder += '<button class="btnDigital '+this.dynamic_class_btn+'"><span> &#x2126;</span></button>'; //ohms button;
 				cont_holder += '</div></div>';			
 			$('#'+this.container_id).append(cont_holder);//renderer
+			
+			window.digitalState = (a, e) => {
+				//e.setAttribute("draggable",false);
+				   //this.attr('draggable','false');
+				dataObject.readerStateType=a;	
 
-			window.state = a => this.dataObject.stateType=a; //make state function global
+				//this is where turning off reader take action
+				if (a =='off') {
+					clearDigitalMultimeter(true);
+				}		
+			} //make digitalState function global
+			window.clearDigitalMultimeter = (c)=>{
+				if (c == true) {				
+					dataObject.readerStateType ='off';				
+					$('#'+this.dynamic_mode_id).html('<span style="font-family:inherit;color:#bbb;">000:00</span>');
+				}else{					
+					clearInterval(this.digitCounter);
+					$('#'+this.dynamic_mode_id).html('000:00');					
+				}
+				
+
+			}
+
+			window.digitalMultimerupdate = (v,type)=>{			
+			/*	let nnew, nnold;
+				setInterval(function(){
+					nnew = ('#'+this.valueholder_id).val();
+				},10);*/	
+				var Digitalconter=0;			
+				//if (range) {}//range for decimal
+				let $vm = this;
+				
+				if (dataObject.stateType != 'off') {	
+					//if (type != this.dataObject.stateType) {}		
+					let decimalPt = [];
+					if (v < 100) {
+						decimalPt = [0.2,0.3];
+					}else if(v < 200){
+						decimalPt = [9.3,5.5, 8.4,7.6];
+					}else if(v < 500){
+						decimalPt = [15.06,20.4,10.3,100.7];
+					}else if(v<1100){
+						decimalPt = [50.55,102.82,120.01,140.88,400.77];
+					}else if(v<10000){
+						decimalPt = [1500.3,500.5, 1000.4,2000.6];
+					}else if (v<50000){
+						decimalPt = [500.3,5000.5, 1000.4,2000.6];						
+					}else{
+						//console.log(323232323);
+						decimalPt = [10000.3,15000.5, 14000.4,2000.6];						
+					}
+
+				 	var digitCounter = setInterval(function(inv){			 	
+				 		decimalPt = $vm.shuffle(decimalPt);					
+				 		/*if (decimalPt.length == 2) {				 			
+							Digitalconter += decimalPt[Math.round(Math.random())];
+				 		}			 		*/
+						Digitalconter += decimalPt[Math.abs(Math.floor(Math.random() * decimalPt.length))];
+						//console.log(Math.abs(Math.floor(Math.random()* decimalPt.length)))
+						if (Digitalconter<=v) {
+							if (v < 999){
+								$('#'+$vm.dynamic_mode_id).html((Digitalconter.toFixed(2)))
+							}else{
+								$('#'+$vm.dynamic_mode_id).html((Digitalconter/1000).toFixed(2)+"<span style='font-size:0.5em;'>k<span>")							
+							}
+						}else{
+							clearInterval(digitCounter);
+						}			
+						if (dataObject.readerStateType =="off") {
+							clearDigitalMultimeter(true);
+						}else if(dataObject.readerStateType != dataObject.stateType) {
+							clearDigitalMultimeter(false)
+						}
+						if (dataObject.value == 0) {
+							clearDigitalMultimeter(false);
+						}
+					},60);
+				}
+			}
 		}
 
 		//
 		setValue(newvalue){
-			this.config.value = newvalue;
+			dataObject.value = newvalue;
 		}
 
 		//callback function wen data changes
 		watchOut(){
 			let $vm = this;
-			watch(this.dataObject,'stateType', function(){
-				$vm.update($vm.config.value);
-			})//
-			watch(this.config,'value', function(){
-				$vm.update($vm.config.value);				
+			watch(dataObject,'readerStateType', function(){
+				//console.log( dataObject )
+				if (dataObject.stateType == dataObject.readerStateType) {
+					digitalMultimerupdate(dataObject.value);
+				}else{						
+					if (dataObject.readerStateType == "off") {
+						clearDigitalMultimeter(true);
+					}else{
+						clearDigitalMultimeter(false);
+					}
+				}
+			})//		
+			watch(dataObject,'value', function(){				
+				if (dataObject.readerStateType != 'off' && dataObject.stateType == dataObject.readerStateType){
+					digitalMultimerupdate(dataObject.value);				
+				}
 			})
 		}
 
@@ -114,29 +208,7 @@ class digitalMultimeter{
 
 		  return array;
 		}
-		update(v,type){			
-		/*	let nnew, nnold;
-			setInterval(function(){
-				nnew = ('#'+this.valueholder_id).val();
-			},10);*/	
-			var Digitalconter=0;			
-			//if (range) {}//range for decimal
-			let $vm = this;
-			
-			if (this.dataObject.stateType != 'off') {	
-				//if (type != this.dataObject.stateType) {}							
-				let decimalPt = [0.01,0.05,0.13,0.50,1.10,1.5,2.50,4.55,0.02,0.03,0.04,0.05,0.06,0.09,5.55,10.10,8.01,9.88,7.77];
-			 	var digitCounter = setInterval(function(inv){			 	
-			 		decimalPt = $vm.shuffle(decimalPt);								 		
-					Digitalconter += decimalPt[Math.floor(Math.random() * 10) + decimalPt.length-10];
-					if (Digitalconter<=v) {
-						$('#'+$vm.dynamic_mode_id).html(Digitalconter.toFixed(2))
-					}else{
-						clearInterval(digitCounter);
-					}					
-				},60);
-			}
-		}
+		
 		getId(){
 			return this.dynamic_id;
 		}
